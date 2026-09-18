@@ -69,4 +69,13 @@ mod tests {
         assert_eq!(parsed.id, "task-001");
         assert_eq!(parsed.teacher_model, "anthropic/claude-3-7-sonnet");
     }
+
+    #[test]
+    fn test_verification_strategy_scoring() {
+        let code = "pub fn add(a: i32, b: i32) -> i32 { a + b }";
+        let out = Verifier::verify(code, VerificationStrategy::CompilerCheck);
+        assert!(out.passed);
+        assert_eq!(out.score, 1.0);
+        assert!(out.compiler_output.is_some());
+    }
 }
