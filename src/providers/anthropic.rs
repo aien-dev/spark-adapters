@@ -9,25 +9,32 @@ pub fn build_anthropic_headers(api_key: &str) -> HeaderMap {
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(
         reqwest::header::HeaderName::from_static("x-api-key"),
-        HeaderValue::from_str(api_key.trim()).unwrap_or_else(|_| HeaderValue::from_static(""))
+        HeaderValue::from_str(api_key.trim()).unwrap_or_else(|_| HeaderValue::from_static("")),
     );
     headers.insert(
         reqwest::header::HeaderName::from_static("anthropic-version"),
-        HeaderValue::from_static("2023-06-01")
+        HeaderValue::from_static("2023-06-01"),
     );
     headers
 }
 
-pub fn format_anthropic_payload(model: &str, messages: &[ChatMessage], temperature: Option<f32>, stream: bool) -> Value {
+pub fn format_anthropic_payload(
+    model: &str,
+    messages: &[ChatMessage],
+    temperature: Option<f32>,
+    stream: bool,
+) -> Value {
     let mut system_prompt = String::new();
     let mut formatted_msgs = Vec::new();
 
     for m in messages {
         if m.role == "system" {
             if !system_prompt.is_empty() {
-                system_prompt.push_str("
+                system_prompt.push_str(
+                    "
 
-");
+",
+                );
             }
             system_prompt.push_str(&m.content);
         } else {
@@ -75,14 +82,22 @@ pub fn parse_anthropic_sse_line(line: &str) -> Option<NormalizedChunk> {
             let delta = val.get("delta")?;
             let delta_type = delta.get("type").and_then(Value::as_str).unwrap_or("");
             if delta_type == "text_delta" {
-                let text = delta.get("text").and_then(Value::as_str).unwrap_or("").to_string();
+                let text = delta
+                    .get("text")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string();
                 Some(NormalizedChunk {
                     content: text,
                     reasoning: String::new(),
                     is_done: false,
                 })
             } else if delta_type == "thinking_delta" {
-                let thinking = delta.get("thinking").and_then(Value::as_str).unwrap_or("").to_string();
+                let thinking = delta
+                    .get("thinking")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string();
                 Some(NormalizedChunk {
                     content: String::new(),
                     reasoning: thinking,
@@ -152,11 +167,23 @@ pub async fn call_anthropic_unary(
         }
     }
 
-    let input_tokens = val.get("usage").and_then(|u| u.get("input_tokens")).and_then(|t| t.as_u64()).unwrap_or(0);
-    let output_tokens = val.get("usage").and_then(|u| u.get("output_tokens")).and_then(|t| t.as_u64()).unwrap_or(0);
+    let input_tokens = val
+        .get("usage")
+        .and_then(|u| u.get("input_tokens"))
+        .and_then(|t| t.as_u64())
+        .unwrap_or(0);
+    let output_tokens = val
+        .get("usage")
+        .and_then(|u| u.get("output_tokens"))
+        .and_then(|t| t.as_u64())
+        .unwrap_or(0);
     let total_tokens = (input_tokens + output_tokens) as usize;
 
-    let reasoning = if reasoning_acc.is_empty() { None } else { Some(reasoning_acc) };
+    let reasoning = if reasoning_acc.is_empty() {
+        None
+    } else {
+        Some(reasoning_acc)
+    };
 
     Ok((text_acc, reasoning, total_tokens))
 }

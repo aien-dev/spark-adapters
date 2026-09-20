@@ -4,7 +4,10 @@ use serde_json::{json, Value};
 
 use crate::models::{ChatMessage, NormalizedChunk};
 
-pub fn build_headers(api_key: Option<&str>, custom_headers: Option<Vec<(String, String)>>) -> HeaderMap {
+pub fn build_headers(
+    api_key: Option<&str>,
+    custom_headers: Option<Vec<(String, String)>>,
+) -> HeaderMap {
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
@@ -19,7 +22,7 @@ pub fn build_headers(api_key: Option<&str>, custom_headers: Option<Vec<(String, 
         for (k, v) in custom {
             if let (Ok(hk), Ok(hv)) = (
                 reqwest::header::HeaderName::from_bytes(k.as_bytes()),
-                HeaderValue::from_str(&v)
+                HeaderValue::from_str(&v),
             ) {
                 headers.insert(hk, hv);
             }
@@ -29,7 +32,12 @@ pub fn build_headers(api_key: Option<&str>, custom_headers: Option<Vec<(String, 
     headers
 }
 
-pub fn format_openai_payload(model: &str, messages: &[ChatMessage], temperature: Option<f32>, stream: bool) -> Value {
+pub fn format_openai_payload(
+    model: &str,
+    messages: &[ChatMessage],
+    temperature: Option<f32>,
+    stream: bool,
+) -> Value {
     let formatted_msgs: Vec<Value> = messages
         .iter()
         .map(|m| {
@@ -67,8 +75,13 @@ pub fn parse_openai_sse_line(line: &str) -> Option<NormalizedChunk> {
     let choice = val.get("choices")?.as_array()?.first()?;
     let delta = choice.get("delta")?;
 
-    let content = delta.get("content").and_then(Value::as_str).unwrap_or("").to_string();
-    let reasoning = delta.get("reasoning_content")
+    let content = delta
+        .get("content")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let reasoning = delta
+        .get("reasoning_content")
         .or_else(|| delta.get("reasoning"))
         .and_then(Value::as_str)
         .unwrap_or("")

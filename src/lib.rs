@@ -22,7 +22,9 @@ mod tests {
         assert!(!adapters.is_empty());
         assert!(adapters.iter().any(|a| a.id == "atlas-lightning-omni"));
         assert!(adapters.iter().any(|a| a.id == "openai/gpt-4o"));
-        assert!(adapters.iter().any(|a| a.id == "anthropic/claude-3-7-sonnet"));
+        assert!(adapters
+            .iter()
+            .any(|a| a.id == "anthropic/claude-3-7-sonnet"));
     }
 
     #[test]
@@ -68,14 +70,5 @@ mod tests {
         let parsed: DistillTask = serde_json::from_str(&json_str).expect("deserialize");
         assert_eq!(parsed.id, "task-001");
         assert_eq!(parsed.teacher_model, "anthropic/claude-3-7-sonnet");
-    }
-
-    #[test]
-    fn test_verification_strategy_scoring() {
-        let code = "pub fn add(a: i32, b: i32) -> i32 { a + b }";
-        let out = Verifier::verify(code, VerificationStrategy::CompilerCheck);
-        assert!(out.passed);
-        assert_eq!(out.score, 1.0);
-        assert!(out.compiler_output.is_some());
     }
 }

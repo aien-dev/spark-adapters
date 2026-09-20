@@ -138,44 +138,87 @@ impl AdapterRouter {
         list
     }
 
-    pub fn resolve_route(&self, model_query: &str) -> (ProviderType, String, String, Option<String>) {
+    pub fn resolve_route(
+        &self,
+        model_query: &str,
+    ) -> (ProviderType, String, String, Option<String>) {
         let trimmed = model_query.trim();
 
         // 1. Direct match in catalog
         for spec in &self.catalog {
             if spec.id == trimmed || spec.model_id == trimmed {
                 let key = spec.provider.key_name().and_then(resolve_secret);
-                return (spec.provider, spec.endpoint.clone(), spec.model_id.clone(), key);
+                return (
+                    spec.provider,
+                    spec.endpoint.clone(),
+                    spec.model_id.clone(),
+                    key,
+                );
             }
         }
 
         // 2. Prefix based matching
         if let Some(rest) = trimmed.strip_prefix("openai/") {
             let key = resolve_secret("OPENAI_API_KEY");
-            return (ProviderType::OpenAI, ProviderType::OpenAI.default_endpoint().to_string(), rest.to_string(), key);
+            return (
+                ProviderType::OpenAI,
+                ProviderType::OpenAI.default_endpoint().to_string(),
+                rest.to_string(),
+                key,
+            );
         }
         if let Some(rest) = trimmed.strip_prefix("anthropic/") {
             let key = resolve_secret("ANTHROPIC_API_KEY");
-            return (ProviderType::Anthropic, ProviderType::Anthropic.default_endpoint().to_string(), rest.to_string(), key);
+            return (
+                ProviderType::Anthropic,
+                ProviderType::Anthropic.default_endpoint().to_string(),
+                rest.to_string(),
+                key,
+            );
         }
         if let Some(rest) = trimmed.strip_prefix("openrouter/") {
             let key = resolve_secret("OPENROUTER_API_KEY");
-            return (ProviderType::OpenRouter, ProviderType::OpenRouter.default_endpoint().to_string(), rest.to_string(), key);
+            return (
+                ProviderType::OpenRouter,
+                ProviderType::OpenRouter.default_endpoint().to_string(),
+                rest.to_string(),
+                key,
+            );
         }
         if let Some(rest) = trimmed.strip_prefix("gemini/") {
             let key = resolve_secret("GEMINI_API_KEY");
-            return (ProviderType::Gemini, ProviderType::Gemini.default_endpoint().to_string(), rest.to_string(), key);
+            return (
+                ProviderType::Gemini,
+                ProviderType::Gemini.default_endpoint().to_string(),
+                rest.to_string(),
+                key,
+            );
         }
         if let Some(rest) = trimmed.strip_prefix("groq/") {
             let key = resolve_secret("GROQ_API_KEY");
-            return (ProviderType::Groq, ProviderType::Groq.default_endpoint().to_string(), rest.to_string(), key);
+            return (
+                ProviderType::Groq,
+                ProviderType::Groq.default_endpoint().to_string(),
+                rest.to_string(),
+                key,
+            );
         }
         if let Some(rest) = trimmed.strip_prefix("ollama/") {
-            return (ProviderType::Ollama, ProviderType::Ollama.default_endpoint().to_string(), rest.to_string(), None);
+            return (
+                ProviderType::Ollama,
+                ProviderType::Ollama.default_endpoint().to_string(),
+                rest.to_string(),
+                None,
+            );
         }
         if let Some(rest) = trimmed.strip_prefix("deepseek/") {
             let key = resolve_secret("DEEPSEEK_API_KEY");
-            return (ProviderType::DeepSeek, ProviderType::DeepSeek.default_endpoint().to_string(), rest.to_string(), key);
+            return (
+                ProviderType::DeepSeek,
+                ProviderType::DeepSeek.default_endpoint().to_string(),
+                rest.to_string(),
+                key,
+            );
         }
 
         // Default fallback to local MAX seat

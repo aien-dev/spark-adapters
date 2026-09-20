@@ -13,6 +13,7 @@ pub enum ProviderType {
     Together,
     Mistral,
     LocalMax,
+    EmbeddedNative,
 }
 
 impl ProviderType {
@@ -28,6 +29,7 @@ impl ProviderType {
             ProviderType::Together => "together",
             ProviderType::Mistral => "mistral",
             ProviderType::LocalMax => "local_max",
+            ProviderType::EmbeddedNative => "embedded_native",
         }
     }
 
@@ -43,6 +45,7 @@ impl ProviderType {
             ProviderType::Together => "Together AI",
             ProviderType::Mistral => "Mistral AI",
             ProviderType::LocalMax => "Modular MAX (GB10 Native)",
+            ProviderType::EmbeddedNative => "Embedded Native (In-Process GB10/CPU)",
         }
     }
 
@@ -51,13 +54,16 @@ impl ProviderType {
             ProviderType::OpenAI => "https://api.openai.com/v1/chat/completions",
             ProviderType::Anthropic => "https://api.anthropic.com/v1/messages",
             ProviderType::OpenRouter => "https://openrouter.ai/api/v1/chat/completions",
-            ProviderType::Gemini => "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+            ProviderType::Gemini => {
+                "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+            }
             ProviderType::Groq => "https://api.groq.com/openai/v1/chat/completions",
             ProviderType::Ollama => "http://127.0.0.1:11434/v1/chat/completions",
             ProviderType::DeepSeek => "https://api.deepseek.com/v1/chat/completions",
             ProviderType::Together => "https://api.together.xyz/v1/chat/completions",
             ProviderType::Mistral => "https://api.mistral.ai/v1/chat/completions",
             ProviderType::LocalMax => "http://127.0.0.1:18006/v1/chat/completions",
+            ProviderType::EmbeddedNative => "in-process://native-transformer",
         }
     }
 
@@ -73,6 +79,7 @@ impl ProviderType {
             ProviderType::Together => Some("TOGETHER_API_KEY"),
             ProviderType::Mistral => Some("MISTRAL_API_KEY"),
             ProviderType::LocalMax => None,
+            ProviderType::EmbeddedNative => None,
         }
     }
 }

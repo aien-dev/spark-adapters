@@ -8,19 +8,25 @@ impl Verifier {
         let mut score: f32 = 1.0;
 
         // 1. Unslop and Tone Checks
-        if content.contains('\u{2014}') || content.contains('—') || content.contains("—") {
-            violations.push("Contains forbidden em dash (—)".to_string());
+        if content.contains('\u{2014}') {
+            violations.push("Contains forbidden em dash".to_string());
             score -= 0.25;
         }
-        if content.contains('\u{2013}') || content.contains('–') || content.contains("—") {
-            violations.push("Contains forbidden en dash (–)".to_string());
+        if content.contains('\u{2013}') {
+            violations.push("Contains forbidden en dash".to_string());
             score -= 0.15;
         }
 
         let banned_words = [
-            "delve", "tapestry", "crucial", "beacon",
-            "game-changer", "unleash", "seamlessly",
-            "elevate", "pivotal"
+            "delve",
+            "tapestry",
+            "crucial",
+            "beacon",
+            "game-changer",
+            "unleash",
+            "seamlessly",
+            "elevate",
+            "pivotal",
         ];
         let lower = content.to_lowercase();
         for word in banned_words {
@@ -31,8 +37,11 @@ impl Verifier {
         }
 
         let sycophancy_phrases = [
-            "certainly!", "great question!", "sure thing!",
-            "i would be happy to help", "as an ai language model"
+            "certainly!",
+            "great question!",
+            "sure thing!",
+            "i would be happy to help",
+            "as an ai language model",
         ];
         for phrase in sycophancy_phrases {
             if lower.contains(phrase) {
@@ -64,7 +73,8 @@ impl Verifier {
                     score -= 0.3;
                     compiler_output = Some(err);
                 } else {
-                    compiler_output = Some("Balanced delimiters and code syntax verified.".to_string());
+                    compiler_output =
+                        Some("Balanced delimiters and code syntax verified.".to_string());
                 }
             }
             VerificationStrategy::JsonSchema => {
@@ -91,7 +101,8 @@ impl Verifier {
         }
 
         score = score.max(0.0).min(1.0);
-        let passed = violations.is_empty() || (score >= 0.70 && !violations.iter().any(|v| v.starts_with("Critical")));
+        let passed = violations.is_empty()
+            || (score >= 0.70 && !violations.iter().any(|v| v.starts_with("Critical")));
 
         VerificationOutcome {
             passed,
@@ -151,7 +162,10 @@ impl Verifier {
         }
 
         if let Some((unmatched, pos)) = stack.pop() {
-            Some(format!("Unclosed delimiter '{}' opened at position {}", unmatched, pos))
+            Some(format!(
+                "Unclosed delimiter '{}' opened at position {}",
+                unmatched, pos
+            ))
         } else {
             None
         }
@@ -173,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_em_dash_detected() {
-        let text = "This module is fast — and very reliable.";
+        let text = "This module is fast \u{2014} and very reliable.";
         let out = Verifier::verify(text, VerificationStrategy::UnslopStrict);
         assert!(!out.passed);
         assert!(out.rule_violations.iter().any(|v| v.contains("em dash")));

@@ -1,6 +1,4 @@
-use crate::models::{
-    ChatMessage, DistillTask, DistillationRecord, Rollout,
-};
+use crate::models::{ChatMessage, DistillTask, DistillationRecord, Rollout};
 use crate::providers::call_provider_unary;
 use crate::router::AdapterRouter;
 use crate::verifier::Verifier;
@@ -23,8 +21,9 @@ impl DistillationEngine {
     pub fn new() -> Self {
         let home = std::env::var("HOME")
             .or_else(|_| std::env::var("USERPROFILE"))
-            .unwrap_or_else(|_| ".".to_string());
-        let default_dir = PathBuf::from(home).join("workspace/distillation-data");
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from("."));
+        let default_dir = home.join("workspace/distillation-data");
         let _ = create_dir_all(&default_dir);
 
         Self {
@@ -88,7 +87,10 @@ impl DistillationEngine {
 
         // 2. Query Student (Local Open-Weight Resident Model)
         let mut student_rollout = None;
-        let student_target = task.student_model.clone().unwrap_or_else(|| "atlas-lightning-omni".to_string());
+        let student_target = task
+            .student_model
+            .clone()
+            .unwrap_or_else(|| "atlas-lightning-omni".to_string());
 
         let (student_provider, student_endpoint, student_model_id, student_key) =
             self.router.resolve_route(&student_target);
@@ -128,7 +130,10 @@ impl DistillationEngine {
 
         if let Some(ref s_roll) = student_rollout {
             preference_delta = teacher_rollout.verification.score - s_roll.verification.score;
-            if teacher_rollout.verification.passed && (!s_roll.verification.passed || teacher_rollout.verification.score >= s_roll.verification.score) {
+            if teacher_rollout.verification.passed
+                && (!s_roll.verification.passed
+                    || teacher_rollout.verification.score >= s_roll.verification.score)
+            {
                 chosen = teacher_content.clone();
                 chosen_reasoning = teacher_reasoning.clone();
                 rejected = Some(s_roll.content.clone());
@@ -145,13 +150,21 @@ impl DistillationEngine {
         }
 
         // 4. Persist to SFT and DPO Datasets
-        self.persist_training_pair(&task, &chosen, chosen_reasoning.as_deref(), rejected.as_deref())?;
+        self.persist_training_pair(
+            &task,
+            &chosen,
+            chosen_reasoning.as_deref(),
+            rejected.as_deref(),
+        )?;
 
         // 5. Commit Durable Knowledge to Spark Cortex if Verified
         let mut durable_committed = false;
         let mut cortex_id = None;
 
-        if task.commit_to_cortex && teacher_rollout.verification.passed && teacher_rollout.verification.score >= 0.85 {
+        if task.commit_to_cortex
+            && teacher_rollout.verification.passed
+            && teacher_rollout.verification.score >= 0.85
+        {
             let entity_name = format!("distill_lesson:{}_{}", task.id, Utc::now().timestamp());
             let canonical = format!("distill_{}", task.id.replace('-', "_"));
             let content_summary = format!(
@@ -162,7 +175,10 @@ impl DistillationEngine {
                 chosen
             );
 
-            if let Ok(id) = self.commit_to_cortex(&entity_name, &canonical, &content_summary).await {
+            if let Ok(id) = self
+                .commit_to_cortex(&entity_name, &canonical, &content_summary)
+                .await
+            {
                 durable_committed = true;
                 cortex_id = Some(id);
             }
@@ -218,7 +234,10 @@ impl DistillationEngine {
         if let Some(r) = chosen_reasoning {
             assistant_obj["reasoning"] = json!(r);
         }
-        sft_entry.get_mut("messages").and_then(|m| m.as_array_mut()).map(|arr| arr.push(assistant_obj));
+        sft_entry
+            .get_mut("messages")
+            .and_then(|m| m.as_array_mut())
+            .map(|arr| arr.push(assistant_obj));
 
         let mut file = OpenOptions::new()
             .create(true)
@@ -260,8 +279,9 @@ impl DistillationEngine {
     ) -> Result<String, String> {
         let home = std::env::var("HOME")
             .or_else(|_| std::env::var("USERPROFILE"))
-            .unwrap_or_else(|_| ".".to_string());
-        let token_path = PathBuf::from(home).join(".config/cortex/token");
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from("."));
+        let token_path = home.join(".config/cortex/token");
         let token = std::fs::read_to_string(token_path)
             .map(|s| s.trim().to_string())
             .unwrap_or_default();
@@ -274,7 +294,8 @@ impl DistillationEngine {
             "content": content
         });
 
-        let res = self.client
+        let res = self
+            .client
             .post(&url)
             .header("Authorization", format!("Bearer {}", token))
             .json(&payload)
@@ -287,7 +308,11 @@ impl DistillationEngine {
         }
 
         let body: serde_json::Value = res.json().await.unwrap_or_default();
-        let entity_id = body.get("id").and_then(|v| v.as_str()).unwrap_or(name).to_string();
+        let entity_id = body
+            .get("id")
+            .and_then(|v| v.as_str())
+            .unwrap_or(name)
+            .to_string();
         Ok(entity_id)
     }
 }
