@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 #[derive(Parser, Debug)]
 #[command(name = "spark-distill")]
-#[command(author = "AIEN <aien.atlas@proton.me>")]
+#[command(author = "AIEN <aien@aienos.com>")]
 #[command(version = "0.1.0")]
 #[command(
     about = "Sovereign Teacher Distillation and Training Pair Generator for Open-Weight Models"
