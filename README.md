@@ -1,3 +1,7 @@
+> Archived: this repository is no longer authoritative. Canonical home: https://github.com/aien-dev/aien-sovereign-core/tree/main/crates/spark-adapters
+>
+> History is preserved read-only. Open new work against the canonical home.
+
 # spark-adapters
 
 Universal third-party model provider adapters and knowledge distillation oracle for Sovereign SparkOS on NVIDIA DGX Grace Blackwell (GB10).
